@@ -1,0 +1,11 @@
+{
+  "name": "profiler",
+  "private": true,
+  "scripts": {
+    "start": "meteor run"
+  },
+  "dependencies": {
+    "contextify": "^0.1.15",
+    "meteor-node-stubs": "~0.2.0"
+  }
+}
