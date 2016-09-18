@@ -6,6 +6,7 @@ var fork = require('child_process').fork;
 
 Meteor.startup( () => {
   // code to run on server at startup
+  Logs.remove({})
   Meteor.call('runProfile')
 });
 
@@ -42,10 +43,10 @@ runVMChild = function( callback ){
   var base = path.resolve('.');
   var filePath = base+"/assets/app/child.js"
   //run a node child process witht he file child.js which is in the folder /private/
+  var timeA = Date.now()
+
   var childProcess = fork(filePath);
 
-  var timeA = Date.now()
-  childProcess.send({ input: 'world'});
   childProcess.on('close', function (code, signal){
     console.log( 'child process terminated due to receipt of signal');
     callback( Date.now() - timeA, 'childvm' );
@@ -60,14 +61,84 @@ runVMChild = function( callback ){
     }
   });
 
+  //trigger a vm run in child.js
+  childProcess.send({ input: 'world'});
+
+
+}
+
+runBackground = function( callback ){
+
+  var base = path.resolve('.');
+  var filePath = base+"/assets/app/child.js"
+  //run a node child process witht he file child.js which is in the folder /private/
+  var backgroundProcess = fork(filePath);
+
+  var testId = Random.id()
+  // var timeA = Date.now()
+
+  var query = Job.find({});
+  var handle = query.observe({
+    added: function ( doc ) {
+      console.log('observeChanges, added', doc._id + "-" + JSON.stringify(doc) );
+      //trigger a job in the process
+      Logs.insert({ testId: testId , name: 'background' , start: Date.now() })
+      backgroundProcess.send({ input: 'world'});
+
+    }
+  });
+
+
+  // backgroundProcess.send({ input: 'world'});
+  // backgroundProcess.on('close', function (code, signal){
+  //   console.log( 'child process terminated due to receipt of signal');
+  // });
+
+var update = function(){
+  // var startTime = Logs.findOne({ testId: testId}).start
+
+  var endTime = Date.now()
+
+  var startTime = Logs.findOne({ testId: testId}).start
+  var totalTime = endTime - startTime
+  Logs.update({ testId: testId }, { $set: { end: endTime , value: totalTime }})
+
+
+}
+update = Meteor.bindEnvironment( update)
+
+  backgroundProcess.on('message', function(response) {
+    if ( response === 'done'){
+      // backgroundProcess.kill('SIGHUP');
+      console.log('done');
+      update()
+      // var endTime = Date.now()
+      //
+      // var startTime = Logs.findOne({ testId: testId}).start
+      // var totalTime = endTime - startTime
+      // Logs.update({ testId: testId }, { $set: { end: endTime , value: totalTime }})
+      //
+      // Meteor.setTimeout(function(){
+      //
+      // }, 1000 )
+    }else{
+      console.log('response from process: ', response);
+    }
+  });
+
+  Job.insert({test: "asdf"} )
+
+
+
+
 }
 
 logTimer = function( res, name ){
   // console.log('milliseconds: ', res )
 //
 console.log('called back');
-  var obj = {}
-  obj[name] = res
+  var obj = {name: name , value: res }
+  // obj[name] = res
   Logs.insert( obj );
 }
 
@@ -75,7 +146,6 @@ logTimer = Meteor.bindEnvironment( logTimer )
 
 Meteor.methods({
   runProfile:function(){
-    Logs.remove({})
 
     runNative( logTimer);
 
@@ -83,5 +153,8 @@ Meteor.methods({
 
     runVMChild( logTimer)
 
+  },
+  runBackground: function(){
+    runBackground()
   }
 });

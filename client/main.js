@@ -3,20 +3,41 @@ import { ReactiveVar } from 'meteor/reactive-var';
 
 import './main.html';
 
-Template.hello.onCreated(function helloOnCreated() {
-  // counter starts at 0
-  this.counter = new ReactiveVar(0);
-});
 
 Template.hello.helpers({
-  counter() {
-    return Template.instance().counter.get();
+  logs() {
+    return Logs.find().fetch()
   },
+  averages(){
+    var logs = Logs.find().fetch()
+
+    var grouped = _.groupBy( logs, 'name')
+    // console.log('grouped', grouped );
+
+    var results = _.map( grouped, function(e, key){
+      var  count = e.length
+      var reduce = _.reduce (e, function( sum, num){ return num.value + sum }, 0);
+      // console.log('reduce each: ', reduce);
+      var obj = {name : key, value: reduce/count}
+      // obj[key] = reduce/count
+      return obj
+
+    })
+
+    // console.log('results', results);
+
+    return results
+  }
+
 });
 
 Template.hello.events({
-  'click button'(event, instance) {
-    // increment the counter when button is clicked
-    instance.counter.set(instance.counter.get() + 1);
+  'click button'(event) {
+    Meteor.call("runProfile");
   },
+  // "click #runProfile": function(event, template){
 });
+
+
+
+// $ DEPLOY_HOSTNAME=us-east-1.galaxy-deploy.meteor.com meteor deploy --settings settings.json profiler.wireline.io

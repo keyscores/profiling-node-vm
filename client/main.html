@@ -3,23 +3,26 @@
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-
+  <h1>VM workflow Profiler</h1>
   {{> hello}}
-  {{> info}}
+
 </body>
 
 <template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
-</template>
+  <button id="runProfile"> Run New Profile </button>
 
-<template name="info">
-  <h2>Learn Meteor!</h2>
-  <ul>
-    <li><a href="https://www.meteor.com/try" target="_blank">Do the Tutorial</a></li>
-    <li><a href="http://guide.meteor.com" target="_blank">Follow the Guide</a></li>
-    <li><a href="https://docs.meteor.com" target="_blank">Read the Docs</a></li>
-    <li><a href="https://forums.meteor.com" target="_blank">Discussions</a></li>
-  </ul>
+  <h4> Averages </h4>
+  {{#each averages}}
+    {{this.name}} - {{this.value}}
+
+  {{/each}}
+
+    <h4> Logs </h4>
+  {{#each logs}}
+    {{this.name}} - {{this.value}}
+    <br>
+
+  {{/each}}
+
+
 </template>

@@ -2,7 +2,8 @@
   "name": "profiler",
   "private": true,
   "scripts": {
-    "start": "meteor run"
+    "start": "meteor run",
+    "deploy": "DEPLOY_HOSTNAME=us-east-1.galaxy-deploy.meteor.com meteor deploy --settings settings.json profiler.wireline.io"
   },
   "dependencies": {
     "contextify": "^0.1.15",
